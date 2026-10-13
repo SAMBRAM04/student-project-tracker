@@ -51,7 +51,43 @@ function renderProjects() {
       nameInput.focus();
     });
 
-    listItem.append(projectName, projectStatus, editButton);
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.textContent = 'Delete';
+
+    deleteButton.addEventListener('click', () => {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete "${project.name}"?`
+      );
+
+      if (!confirmed) {
+        message.textContent = 'Deletion cancelled.';
+        return;
+      }
+
+      const index = projects.findIndex(item => item.id === project.id);
+
+      if (index === -1) {
+        return;
+      }
+
+      if (editingId === project.id) {
+        resetForm();
+      }
+
+      projects.splice(index, 1);
+
+      renderProjects();
+      message.textContent = 'Project deleted successfully!';
+    });
+
+    listItem.append(
+      projectName,
+      projectStatus,
+      editButton,
+      deleteButton
+    );
+
     projectList.appendChild(listItem);
   });
 }
