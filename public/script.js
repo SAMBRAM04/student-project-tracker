@@ -1,21 +1,30 @@
 const form = document.querySelector('#project-form');
 const nameInput = document.querySelector('#name');
 const statusInput = document.querySelector('#status');
+const saveButton = document.querySelector('#save-button');
+const cancelButton = document.querySelector('#cancel-button');
 const projectList = document.querySelector('#project-list');
 const emptyState = document.querySelector('#empty-state');
+const message = document.querySelector('#message');
 
 const projects = [];
 
+let editingId = null;
+
+function resetForm() {
+  form.reset();
+  editingId = null;
+  saveButton.textContent = 'Add Project';
+  cancelButton.hidden = true;
+}
+
 function renderProjects() {
-  // Clear the list before displaying projects again
   projectList.replaceChildren();
 
-  // Show or hide the empty-state message
   if (emptyState) {
     emptyState.hidden = projects.length > 0;
   }
 
-  // Display every project
   projects.forEach(project => {
     const listItem = document.createElement('li');
 
@@ -23,44 +32,76 @@ function renderProjects() {
     projectName.textContent = project.name;
 
     const projectStatus = document.createElement('span');
-    projectStatus.textContent = ` — ${project.status}`;
+    projectStatus.textContent = ` — ${project.status} `;
 
-    listItem.append(projectName, projectStatus);
+    const editButton = document.createElement('button');
+    editButton.type = 'button';
+    editButton.textContent = 'Edit';
+
+    editButton.addEventListener('click', () => {
+      editingId = project.id;
+
+      nameInput.value = project.name;
+      statusInput.value = project.status;
+
+      saveButton.textContent = 'Save changes';
+      cancelButton.hidden = false;
+      message.textContent = 'Editing project.';
+
+      nameInput.focus();
+    });
+
+    listItem.append(projectName, projectStatus, editButton);
     projectList.appendChild(listItem);
   });
 }
 
-// Handle adding a project
 form.addEventListener('submit', event => {
   event.preventDefault();
 
-  // Read the values entered by the user
   const name = nameInput.value.trim();
   const status = statusInput.value;
 
-  // Reject an empty project name
   if (!name) {
+    message.textContent = 'Please enter a project name.';
     nameInput.focus();
     return;
   }
 
-  // Create a new project object
+  if (editingId !== null) {
+    const project = projects.find(item => item.id === editingId);
+
+    if (project) {
+      project.name = name;
+      project.status = status;
+      message.textContent = 'Project updated successfully!';
+    }
+
+    resetForm();
+    renderProjects();
+    nameInput.focus();
+    return;
+  }
+
   const project = {
     id: crypto.randomUUID(),
     name: name,
     status: status
   };
 
-  // Add the project to the temporary collection
   projects.push(project);
 
-  // Display all projects
   renderProjects();
+  resetForm();
 
-  // Clear the form for the next project
-  form.reset();
+  message.textContent = 'Project added successfully!';
   nameInput.focus();
 });
 
-// Display the initial empty state
+cancelButton.addEventListener('click', () => {
+  resetForm();
+  message.textContent = 'Edit cancelled.';
+  nameInput.focus();
+});
+
 renderProjects();
